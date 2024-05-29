@@ -1,50 +1,140 @@
-let sourceImg=null;
-let maskImg=null;
-let renderCounter=0;
+let sourceImg = null;
+let maskImg = null;
+let backgroundImg = null;
+let renderCounter = 0;
+let shimmerParticles = [];
+let maxShimmerParticles = 30;
 
-// change these three lines as appropiate
-let sourceFile = "input_1.jpg";
-let maskFile   = "mask_1.png";
-let outputFile = "output_1.png";
+// Change these three lines as appropriate
+let sourceFile = "input_3.jpg";
+let maskFile = "mask_3.png";
+let backgroundFile = "input_3.jpg"; // Add your background image file here
+let outputFile = "output_3.png";
 
 function preload() {
   sourceImg = loadImage(sourceFile);
   maskImg = loadImage(maskFile);
+  backgroundImg = loadImage(backgroundFile); // Load the background image
 }
 
-function setup () {
+function setup() {
   let main_canvas = createCanvas(1920, 1080);
   main_canvas.parent('canvasContainer');
 
   imageMode(CENTER);
   noStroke();
-  background(255, 0, 0);
   sourceImg.loadPixels();
   maskImg.loadPixels();
+  backgroundImg.loadPixels();
+
+  imageMode(CORNER); // Change image mode to CORNER for the background image
+
+  // Initialize shimmer particles
+  for (let i = 0; i < maxShimmerParticles; i++) {
+    shimmerParticles.push(createShimmerParticle());
+  }
 }
 
-function draw () {
-  for(let i=0;i<4000;i++) {
+function draw() {
+  // Draw the background image each frame to ensure it is not cleared
+  image(backgroundImg, 0, 0, width, height);
+
+  for (let i = 0; i < 4000; i++) {
     let x = floor(random(sourceImg.width));
     let y = floor(random(sourceImg.height));
-    let pix = sourceImg.get(x, y);
     let mask = maskImg.get(x, y);
-    fill(pix);
-    if(mask[0] > 128) {
-      let pointSize = 10;
-      ellipse(x, y, pointSize, pointSize);
-    }
-    else {
-      let pointSize = 20;
-      rect(x, y, pointSize, pointSize);    
+
+    if (mask[0] > 128) {
+      let pix = sourceImg.get(x, y);
+
+      // Shimmer effect
+      updateShimmerParticles(x, y);
+
+      // Lens flare effect
+      drawLensFlare(x, y);
+
+      // Emboss effect
+      applyEmboss(x, y);
     }
   }
+
   renderCounter = renderCounter + 1;
-  if(renderCounter > 10) {
-    console.log("Done!")
+  if (renderCounter > 10) {
+    console.log("Done!");
     noLoop();
-    // uncomment this to save the result
+    // Uncomment this to save the result
     // saveArtworkImage(outputFile);
+  }
+}
+
+function createShimmerParticle() {
+  return {
+    x: random(sourceImg.width),
+    y: random(sourceImg.height),
+    size: random(2, 2),
+    opacity: random(50, 200),
+    speed: random(0.5, 2),
+  };
+}
+
+function updateShimmerParticles(x, y) {
+  for (let i = 0; i < shimmerParticles.length; i++) {
+    let p = shimmerParticles[i];
+
+    // Move particle
+    p.y += p.speed;
+    if (p.y > height) p.y = 0;
+
+    // Draw particle
+    fill(255, 255, 255, p.opacity);
+    ellipse(p.x, p.y, p.size);
+
+    // Reposition particle within the jewelry area
+    if (dist(p.x, p.y, x, y) < 50) {
+      p.x = x + random(-50, 50);
+      p.y = y + random(-50, 50);
+    }
+  }
+}
+
+function drawLensFlare(x, y) {
+  let numFlares = 3;
+  for (let i = 0; i < numFlares; i++) {
+    let flareSize = random(10, 10);
+    let flareOpacity = random(20, 3000);
+    fill(255, 255, 255, flareOpacity);
+    ellipse(x, y, flareSize);
+
+    // Additional smaller circles for a more complex flare effect
+    let smallFlareSize = flareSize / 2;
+    fill(255, 255, 255, flareOpacity / 3);
+    ellipse(x + random(-flareSize, flareSize), y + random(-flareSize, flareSize), smallFlareSize);
+  }
+}
+
+function applyEmboss(x, y) {
+  // Define the light and dark colors for the emboss effect
+  let lightColor = color(255); // White
+  let darkColor = color(100); // Dark gray
+  
+  // Define the strength of the emboss effect
+  let embossStrength = 40;
+  
+  // Apply the emboss effect to the jewelry edges
+  for (let i = -1; i <= 1; i++) {
+    for (let j = -1; j <= 1; j++) {
+      if (i != 0 && j != 0) {
+        let offsetX = i * embossStrength;
+        let offsetY = j * embossStrength;
+        
+        // Draw the light and dark edges
+        fill(lightColor);
+        rect(x + offsetX, y + offsetY, 2, 2);
+        
+        fill(darkColor);
+        rect(x - offsetX, y - offsetY, 2, 2);
+      }
+    }
   }
 }
 
