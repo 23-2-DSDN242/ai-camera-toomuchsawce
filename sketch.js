@@ -3,13 +3,13 @@ let maskImg = null;
 let backgroundImg = null;
 let renderCounter = 0;
 let shimmerParticles = [];
-let maxShimmerParticles = 30;
+let maxShimmerParticles = 70;
 
 // Change these three lines as appropriate
-let sourceFile = "input_3.jpg";
-let maskFile = "mask_3.png";
-let backgroundFile = "input_3.jpg"; // Add your background image file here
-let outputFile = "output_3.png";
+let sourceFile = "input_6.jpg";
+let maskFile = "mask_6.png";
+let backgroundFile = "input_6.jpg"; // Add your background image file here
+let outputFile = "output_6.png";
 
 function preload() {
   sourceImg = loadImage(sourceFile);
@@ -63,7 +63,7 @@ function draw() {
     console.log("Done!");
     noLoop();
     // Uncomment this to save the result
-    // saveArtworkImage(outputFile);
+    saveArtworkImage(outputFile);
   }
 }
 
@@ -85,8 +85,11 @@ function updateShimmerParticles(x, y) {
     p.y += p.speed;
     if (p.y > height) p.y = 0;
 
-    // Draw particle
-    fill(255, 255, 255, p.opacity);
+    // Generate random color for each particle
+    let shimmerColor = color(random(255), random(255), random(255), p.opacity);
+
+    // Draw particle with random color
+    fill(shimmerColor);
     ellipse(p.x, p.y, p.size);
 
     // Reposition particle within the jewelry area
@@ -98,39 +101,50 @@ function updateShimmerParticles(x, y) {
 }
 
 function drawLensFlare(x, y) {
-  let numFlares = 3;
+  colorMode(HSB, 360, 100, 100, 1); // Set color mode to HSB
+  let numFlares = 0.01;
   for (let i = 0; i < numFlares; i++) {
-    let flareSize = random(10, 10);
-    let flareOpacity = random(20, 3000);
-    fill(255, 255, 255, flareOpacity);
+    let flareSize = random(10, 30); // Adjusted the size range for more variability
+    let flareOpacity = random(0.6, 1); // Ensure high opacity for brightness
+
+    // Generate random bright color within the rainbow spectrum
+    let hue = random(0, 360); // Hue from 0 to 360 for full spectrum
+    let flareColor = color(hue, 100, 100, flareOpacity); // Full saturation and brightness
+
+    // Draw main flare ellipse with solid color
+    noStroke();
+    fill(flareColor);
     ellipse(x, y, flareSize);
 
     // Additional smaller circles for a more complex flare effect
     let smallFlareSize = flareSize / 2;
-    fill(255, 255, 255, flareOpacity / 3);
+    let smallFlareColor = color(hue, 100, 100, flareOpacity);
+    
+    fill(smallFlareColor);
     ellipse(x + random(-flareSize, flareSize), y + random(-flareSize, flareSize), smallFlareSize);
   }
+  colorMode(RGB, 255); // Reset color mode to default RGB
 }
 
 function applyEmboss(x, y) {
-  // Define the light and dark colors for the emboss effect
-  let lightColor = color(255); // White
-  let darkColor = color(100); // Dark gray
-  
   // Define the strength of the emboss effect
-  let embossStrength = 40;
-  
+  let embossStrength = 60;
+
   // Apply the emboss effect to the jewelry edges
   for (let i = -1; i <= 1; i++) {
     for (let j = -1; j <= 1; j++) {
       if (i != 0 && j != 0) {
         let offsetX = i * embossStrength;
         let offsetY = j * embossStrength;
-        
-        // Draw the light and dark edges
+
+        // Generate random colors for the light and dark edges
+        let lightColor = color(random(255), random(255), random(255));
+        let darkColor = color(random(255), random(255), random(255));
+
+        // Draw the light and dark edges with random colors
         fill(lightColor);
         rect(x + offsetX, y + offsetY, 2, 2);
-        
+
         fill(darkColor);
         rect(x - offsetX, y - offsetY, 2, 2);
       }
